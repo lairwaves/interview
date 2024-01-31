@@ -1,11 +1,30 @@
 <template>
   <q-page class="row q-pt-xl">
     <div class="full-width q-px-xl">
-      <div class="q-mb-xl">
-        <q-input v-model="tempData.name" label="姓名" />
-        <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md">新增</q-btn>
-      </div>
+      <form @submit.prevent.stop="addData()" class="q-gutter-md">
+        <div class="q-mb-xl">
+          <q-input
+            ref="nameRef"
+            v-model="tempData.name"
+            :rules="[rules.notEmpty]"
+            label="姓名"
+          />
+          <q-input
+            ref="ageRef"
+            :rules="[rules.notEmpty, rules.isPositiveInteger]"
+            v-model="tempData.age"
+            label="年齡"
+          />
+          <q-btn
+            color="primary"
+            :loading="loading.add"
+            class="q-mt-md"
+            type="submit"
+          >
+            新增
+          </q-btn>
+        </div>
+      </form>
 
       <q-table
         flat
@@ -16,6 +35,7 @@
         row-key="id"
         hide-pagination
         separator="cell"
+        :loading="loading.get"
         :rows-per-page-options="[0]"
       >
         <template v-slot:header="props">
@@ -74,23 +94,58 @@
         </template>
       </q-table>
     </div>
+    <!-- 編輯 -->
+    <q-dialog v-model="isEdit" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">編輯資料</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input v-model="tempEditData.name" label="姓名" />
+          <q-input v-model="tempEditData.age" label="年齡" />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="取消" @click="isEdit = false" />
+          <q-btn
+            flat
+            label="更新"
+            :loading="loading.edit"
+            @click="
+              editData({
+                ID: tempEditData.ID,
+                name: tempEditData.name,
+                age: Number(tempEditData.age),
+              })
+            "
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import axios from 'axios';
-import { QTableProps } from 'quasar';
-import { ref } from 'vue';
+import { QTableProps, useQuasar } from 'quasar';
+import { onMounted, ref } from 'vue';
+import {
+  getCrudTest,
+  postCrudTest,
+  patchCrudTest,
+  deleteCrudTest,
+} from 'src/api/crud';
+import type { CrudTestData } from 'src/api/crud.type';
 interface btnType {
   label: string;
   icon: string;
   status: string;
 }
 const blockData = ref([
-  {
-    name: 'test',
-    age: 25,
-  },
+  // {
+  //   name: 'test',
+  //   age: 25,
+  // },
 ]);
 const tableConfig = ref([
   {
@@ -119,13 +174,170 @@ const tableButtons = ref([
   },
 ]);
 
+const rules = {
+  notEmpty: (val: string) => !!val || '欄位不得為空白',
+  isPositiveInteger: (val: string) =>
+    (/^\d+$/.test(val) && parseInt(val, 10) > 0) || '欄位必須為正整數',
+};
+const nameRef = ref();
+const ageRef = ref();
+const onReset = async () => {
+  tempData.value.name = '';
+  tempData.value.age = '';
+
+  nameRef.value.resetValidation();
+  ageRef.value.resetValidation();
+};
 const tempData = ref({
   name: '',
   age: '',
 });
-function handleClickOption(btn, data) {
+
+const loading = ref({
+  get: false,
+  add: false,
+  edit: false,
+  delete: false,
+});
+const getData = async () => {
+  loading.value.get = true;
+  try {
+    const res = await getCrudTest();
+    console.log(res.data);
+  } catch (error) {
+    console.log(error);
+    $q.notify({
+      icon: 'error',
+      color: 'danger',
+      message: '發生錯誤',
+    });
+  } finally {
+    loading.value.get = false;
+  }
+};
+const addData = async () => {
+  loading.value.add = true;
+  nameRef.value.validate();
+  ageRef.value.validate();
+
+  if (nameRef.value.hasError || ageRef.value.hasError) {
+    loading.value.add = false;
+    // form has error
+    return;
+  }
+  try {
+    const res = await postCrudTest({
+      name: tempData.value.name,
+      age: Number(tempData.value.age),
+    });
+    console.log(res.data);
+    $q.notify({
+      icon: 'done',
+      color: 'positive',
+      message: '送出成功',
+    });
+    await onReset();
+    await getData();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loading.value.add = false;
+  }
+};
+const isEdit = ref(false);
+const tempEditData = ref({
+  ID: '',
+  name: '',
+  age: '',
+});
+const editData = async (data: CrudTestData) => {
+  loading.value.edit = true;
+  try {
+    const res = await patchCrudTest(data);
+    console.log(res.data);
+    $q.notify({
+      icon: 'done',
+      color: 'positive',
+      message: '送出成功',
+    });
+  } catch (error) {
+    console.log(error);
+    $q.notify({
+      icon: 'error',
+      color: 'danger',
+      message: '發生錯誤',
+    });
+    loading.value.edit = false;
+  } finally {
+    loading.value.edit = false;
+  }
+};
+const $q = useQuasar();
+const isDelete = ref(false);
+const deleteData = async (id: string) => {
+  loading.value.delete = true;
+  try {
+    $q.dialog({
+      title: '提示',
+      message: '是否確定刪除該筆資料？',
+      cancel: '取消',
+
+      persistent: true,
+    })
+      .onOk(async () => {
+        console.log('>>>> OK');
+        await deleteCrudTest(id);
+        $q.notify({
+          icon: 'done',
+          color: 'positive',
+          message: '刪除成功',
+        });
+      })
+      .onOk(() => {
+        // console.log('>>>> second OK catcher')
+      })
+      .onCancel(() => {
+        // console.log('>>>> Cancel')
+      })
+      .onDismiss(() => {
+        // console.log('I am triggered on both OK and Cancel')
+      });
+  } catch (error) {
+    console.log(error);
+    $q.notify({
+      icon: 'error',
+      color: 'danger',
+      message: '發生錯誤',
+    });
+    loading.value.delete = false;
+  } finally {
+    loading.value.delete = false;
+  }
+};
+
+function handleClickOption(
+  btn: btnType,
+  data: { ID: string; name: string; age: number }
+) {
   // ...
+  console.log(btn, data);
+  switch (btn.status) {
+    case 'edit':
+      tempEditData.value.ID = data.ID;
+      tempEditData.value.name = data.name;
+      tempEditData.value.age = `${data.age}`;
+      isEdit.value = true;
+      break;
+    case 'delete':
+      isDelete.value = true;
+      deleteData(data.ID);
+      break;
+  }
 }
+
+onMounted(async () => {
+  await getData();
+});
 </script>
 
 <style lang="scss" scoped>
