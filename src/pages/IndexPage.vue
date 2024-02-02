@@ -223,7 +223,7 @@ const getData = async () => {
     $q.notify({
       icon: 'error',
       type: 'error',
-      color: 'danger',
+      color: 'negative',
       message: '發生錯誤',
     });
   } finally {
@@ -284,7 +284,7 @@ const editData = async (data: CrudTestData) => {
     $q.notify({
       icon: 'error',
       type: 'error',
-      color: 'danger',
+      color: 'negative',
       message: '發生錯誤',
     });
     loading.value.edit = false;
@@ -327,9 +327,9 @@ const deleteData = async (id: string) => {
   } catch (error) {
     console.log(error);
     $q.notify({
-      type: 'error',
       icon: 'error',
-      color: 'danger',
+      type: 'error',
+      color: 'negative',
       message: '發生錯誤',
     });
     loading.value.delete = false;

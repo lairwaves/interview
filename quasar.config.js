@@ -85,34 +85,21 @@ module.exports = configure(function (/* ctx */) {
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
-    devServer: {
-      open: true, // opens browser window automatically
-      proxy: {
-        // 將所有以/api開頭的請求代理
-        '/api': {
-          target: 'https://demo.mercuryfire.com.tw:49110',
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => {
-            console.log(path);
-            return path.replace(/^\/api/, '');
-          },
-        },
-      },
-    },
-    // port: 9001,
-    proxy: {
-      // 將所有以/api開頭的請求代理
-      '/api': {
-        target: 'https://demo.mercuryfire.com.tw:49110',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => {
-          console.log(path);
-          return path.replace(/^\/api/, '');
-        },
-      },
-    },
+    // TODO in dev mode
+    // devServer: {
+    //   open: true, // opens browser window automatically
+    //   proxy: {
+    //     '/api': {
+    //       target: 'https://demo.mercuryfire.com.tw:49110',
+    //       changeOrigin: true,
+    //       secure: false,
+    //       rewrite: (path) => {
+    //         console.log(path);
+    //         return path.replace(/^\/api/, '');
+    //       },
+    //     },
+    //   },
+    // },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
     framework: {
