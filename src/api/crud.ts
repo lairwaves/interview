@@ -2,7 +2,7 @@ import { api } from 'src/boot/axios';
 import { CrudTestData } from './crud.type';
 
 function getCrudTest() {
-  return api.request<CrudTestData[]>({
+  return api.request<{ result: CrudTestData[] }>({
     url: '/crudTest/a',
     method: 'get',
   });
@@ -27,7 +27,7 @@ function patchCrudTest(data: CrudTestData) {
 function deleteCrudTest(id: string) {
   return api.request({
     url: `/crudTest/${id}`,
-    method: 'patch',
+    method: 'delete',
   });
 }
 

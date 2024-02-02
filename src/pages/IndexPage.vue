@@ -100,27 +100,42 @@
         <q-card-section>
           <div class="text-h6">編輯資料</div>
         </q-card-section>
+        <form
+          @submit.prevent.stop="
+            editData({
+              id: tempEditData.id,
+              name: tempEditData.name,
+              age: Number(tempEditData.age),
+            })
+          "
+          class="q-gutter-md"
+        >
+          <q-card-section class="q-pt-none">
+            <q-input
+              ref="nameRef"
+              v-model="tempEditData.name"
+              :rules="[rules.notEmpty]"
+              label="姓名"
+            />
+            <q-input
+              ref="ageRef"
+              :rules="[rules.notEmpty, rules.isPositiveInteger]"
+              v-model="tempEditData.age"
+              label="年齡"
+            />
+          </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          <q-input v-model="tempEditData.name" label="姓名" />
-          <q-input v-model="tempEditData.age" label="年齡" />
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="取消" @click="isEdit = false" />
-          <q-btn
-            flat
-            label="更新"
-            :loading="loading.edit"
-            @click="
-              editData({
-                ID: tempEditData.ID,
-                name: tempEditData.name,
-                age: Number(tempEditData.age),
-              })
-            "
-          />
-        </q-card-actions>
+          <q-card-actions align="right" class="text-primary">
+            <q-btn flat label="取消" @click="isEdit = false" />
+            <q-btn
+              color="primary"
+              label="更新"
+              :loading="loading.edit"
+              type="submit"
+            >
+            </q-btn>
+          </q-card-actions>
+        </form>
       </q-card>
     </q-dialog>
   </q-page>
@@ -141,12 +156,9 @@ interface btnType {
   icon: string;
   status: string;
 }
-const blockData = ref([
-  // {
-  //   name: 'test',
-  //   age: 25,
-  // },
-]);
+const $q = useQuasar();
+
+const blockData = ref<CrudTestData[]>();
 const tableConfig = ref([
   {
     label: '姓名',
@@ -201,13 +213,16 @@ const loading = ref({
 });
 const getData = async () => {
   loading.value.get = true;
+  blockData.value = [];
   try {
     const res = await getCrudTest();
     console.log(res.data);
+    blockData.value = res.data.result;
   } catch (error) {
     console.log(error);
     $q.notify({
       icon: 'error',
+      type: 'error',
       color: 'danger',
       message: '發生錯誤',
     });
@@ -235,18 +250,19 @@ const addData = async () => {
       icon: 'done',
       color: 'positive',
       message: '送出成功',
+      position: 'top',
     });
-    await onReset();
-    await getData();
+    onReset();
   } catch (error) {
     console.log(error);
   } finally {
     loading.value.add = false;
+    await getData();
   }
 };
 const isEdit = ref(false);
 const tempEditData = ref({
-  ID: '',
+  id: '',
   name: '',
   age: '',
 });
@@ -257,13 +273,17 @@ const editData = async (data: CrudTestData) => {
     console.log(res.data);
     $q.notify({
       icon: 'done',
+      type: 'positive',
       color: 'positive',
       message: '送出成功',
     });
+    isEdit.value = false;
+    await getData();
   } catch (error) {
     console.log(error);
     $q.notify({
       icon: 'error',
+      type: 'error',
       color: 'danger',
       message: '發生錯誤',
     });
@@ -272,7 +292,6 @@ const editData = async (data: CrudTestData) => {
     loading.value.edit = false;
   }
 };
-const $q = useQuasar();
 const isDelete = ref(false);
 const deleteData = async (id: string) => {
   loading.value.delete = true;
@@ -281,6 +300,7 @@ const deleteData = async (id: string) => {
       title: '提示',
       message: '是否確定刪除該筆資料？',
       cancel: '取消',
+      ok: '確認',
 
       persistent: true,
     })
@@ -289,9 +309,11 @@ const deleteData = async (id: string) => {
         await deleteCrudTest(id);
         $q.notify({
           icon: 'done',
+          type: 'positive',
           color: 'positive',
           message: '刪除成功',
         });
+        await getData();
       })
       .onOk(() => {
         // console.log('>>>> second OK catcher')
@@ -305,6 +327,7 @@ const deleteData = async (id: string) => {
   } catch (error) {
     console.log(error);
     $q.notify({
+      type: 'error',
       icon: 'error',
       color: 'danger',
       message: '發生錯誤',
@@ -317,20 +340,20 @@ const deleteData = async (id: string) => {
 
 function handleClickOption(
   btn: btnType,
-  data: { ID: string; name: string; age: number }
+  data: { id: string; name: string; age: number }
 ) {
   // ...
   console.log(btn, data);
   switch (btn.status) {
     case 'edit':
-      tempEditData.value.ID = data.ID;
+      tempEditData.value.id = data.id;
       tempEditData.value.name = data.name;
       tempEditData.value.age = `${data.age}`;
       isEdit.value = true;
       break;
     case 'delete':
       isDelete.value = true;
-      deleteData(data.ID);
+      deleteData(data.id);
       break;
   }
 }

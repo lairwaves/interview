@@ -1,5 +1,6 @@
 export interface CrudTestData {
-  ID?: string;
+  id?: string;
   name: string;
   age: number;
+  creatorId?: string;
 }

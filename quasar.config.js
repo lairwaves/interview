@@ -52,6 +52,13 @@ module.exports = configure(function (/* ctx */) {
         browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
         node: 'node16',
       },
+      /**
+       * @example
+       * {
+       *   // const { ... } = require('locales/...')
+       *   locales: path.join(__dirname, 'src/locales')
+       * }
+       */
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
       // vueRouterBase,
@@ -85,6 +92,7 @@ module.exports = configure(function (/* ctx */) {
         '/api': {
           target: 'https://demo.mercuryfire.com.tw:49110',
           changeOrigin: true,
+          secure: false,
           rewrite: (path) => {
             console.log(path);
             return path.replace(/^\/api/, '');
@@ -98,6 +106,7 @@ module.exports = configure(function (/* ctx */) {
       '/api': {
         target: 'https://demo.mercuryfire.com.tw:49110',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => {
           console.log(path);
           return path.replace(/^\/api/, '');
@@ -120,7 +129,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify', 'Dialog'],
     },
 
     // animations: 'all', // --- includes all animations

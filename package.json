@@ -3,14 +3,15 @@
   "version": "0.0.1",
   "description": "A Quasar Project",
   "productName": "Quasar App",
-  "author": "zihyinhsu <jenny010328@gmail.com>",
+  "author": "zihyinhsu <jenny010328@gmail.com> & Wilson <lairwaves5888@gmail.com>",
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
-    "build": "quasar build"
+    "build": "quasar build",
+    "deploy": "vercel"
   },
   "dependencies": {
     "axios": "^1.2.1",
